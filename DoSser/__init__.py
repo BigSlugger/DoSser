@@ -1,2 +1,3 @@
-from DoSser import utils
-from DoSser import teardropAttack
+from DoSser import *
+from utils import *
+from teardropAttack import *

